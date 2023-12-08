@@ -1,0 +1,255 @@
+import speech_recognition as sr
+import pyttsx3
+import pywhatkit
+import datetime
+import pyjokes
+import webbrowser
+import smtplib
+import random
+import email
+from email.message import EmailMessage
+import imaplib
+
+name = 'Voice Assistant'
+
+def male_voice():
+    engine.setProperty('voice', "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0")
+
+listener = sr.Recognizer()
+engine = pyttsx3.init()
+
+def talk(text):
+    engine.say(text)
+    engine.runAndWait()
+
+def prank(toaddr, message, e_num):
+    fromaddrs = 'your-email@gmail.com'
+    password = 'your-app-password'
+
+    with smtplib.SMTP('smtp.gmail.com', '587') as smtpserver:
+        smtpserver.ehlo()
+        smtpserver.starttls()
+        smtpserver.ehlo()
+        smtpserver.login(fromaddrs, password)
+        for i in range(e_num):
+            smtpserver.sendmail(fromaddrs, toaddr, message)
+            print(i)
+
+def listen():
+    try:
+        with sr.Microphone() as source:
+            print("Listening...")
+            listener.adjust_for_ambient_noise(source, duration=1)
+            voice = listener.listen(source)
+            rec = listener.recognize_google(voice, language="en-US")
+            rec = rec.lower()
+            if name in rec:
+                rec = rec.replace(name, '')
+                print(rec)
+            return rec
+    except:
+        pass
+    return ""
+
+def happy_songs():
+    happy_songs = ['song-link-1', 'song-link-2']
+    songs = random.choice(happy_songs)
+    pywhatkit.playonyt(songs)
+
+def extract_info(user, password):
+    server = imaplib.IMAP4_SSL('imap.gmail.com')
+
+    try:
+        server.login(user, password)
+        server.select('Inbox')
+        _ , email_ids = server.search(None, '(UNSEEN FROM "example-sender@gmail.com")')
+        # ... [rest of the function remains unchanged you can find it on my other repository] ...
+        print((f'subject: \n \n {subject} \n body: {body_content}'))
+        talk(f'the message is: {subject}  {body_content}')
+    except Exception as e:
+        print('the program has an error: ', str(e))    
+    finally:
+        server.logout()
+
+
+animals_game = [
+    {'name': 'dog', 'features': ['barks', 'mammal', 'domestic']},
+    {'name': 'elephant', 'features': ['trunk', 'mammal', 'jungle']},
+    {'name': 'cat', 'features': ['meows', 'mammal', 'domestic']},
+    {'name': 'eagle', 'features': ['flies', 'bird', 'predator']},
+    {'name': 'pig', 'features': ['grunts', 'mammal', 'farm']},
+    {'name': 'snake', 'features': ['hisses', 'reptile', 'slithers']},
+    {'name': 'penguin', 'features': ['walks', 'bird', 'Antarctica']},
+    {'name': 'rat', 'features': ['squeaks', 'rodent', 'urban']},
+    {'name': 'cow', 'features': ['moos', 'mammal', 'farm']},
+    {'name': 'bear', 'features': ['roars', 'mammal', 'forest']},
+    {'name': 'beaver', 'features': ['builds', 'rodent', 'rivers']},
+    {'name': 'bird', 'features': ['sings', 'bird', 'flyer']},
+    {'name': 'lion', 'features': ['roars', 'mammal', 'savanna']},
+    {'name': 'crocodile', 'features': ['deep growl', 'reptile', 'swamp']},
+    {'name': 'turtle', 'features': ['slow walk', 'reptile', 'shell']},
+    {'name': 'spider', 'features': ['spins webs', 'arthropod', 'solitary']},
+    {'name': 'frog', 'features': ['croaks', 'amphibian', 'pond']},
+    {'name': 'panda', 'features': ['eats bamboo', 'mammal', 'bamboo']},
+    {'name': 'jellyfish', 'features': ['venomous tentacles', 'cnidarian', 'ocean']},
+    {'name': 'duck', 'features': ['quacks', 'bird', 'aquatic']},
+    {'name': 'monkey', 'features': ['chatters', 'mammal', 'jungle']},
+    {'name': 'ant', 'features': ['works in colonies', 'insect', 'formicidae']}
+]
+
+
+def guess_animal():
+    while True:
+        talk("Let's play a game. I will describe an animal, and you'll try to guess it. Let's get started!")
+        selected_animal = random.choice(animals_game)
+        animal_name = selected_animal['name']
+        animal_features = selected_animal['features']
+
+        talk("I'm thinking of an animal. Pay attention and guess what it is.")
+        talk("Here are some characteristics:")
+        for feature in animal_features:
+            talk(feature)
+
+        attempts = 5
+
+        while attempts > 0:
+            response = listen()
+
+            if response == 'exit' or 'finish' or 'stop':
+                talk("Exiting the game")
+                return  # Return to the bot
+
+            if response == animal_name:
+                talk("Congratulations, you've guessed the animal!")
+                return  # Return to the bot
+            else:
+                attempts -= 1
+                talk("You've failed, try again.")
+                talk("Here are the characteristics again:")
+                for feature in animal_features:
+                    talk(feature)
+
+        if attempts == 0:
+            talk("You've used up all your attempts. You lost. The correct animal was " + animal_name)
+
+
+         
+def run():
+    male_voice()
+    while True:
+        rec = listen()
+
+        if 'put' in rec or 'youtube' in rec:
+            play_query = rec.replace('put', '').replace('youtube', '')
+            talk("Playing " + play_query + " on YouTube")
+            pywhatkit.playonyt(play_query)
+
+        elif 'animal' in rec or 'game' in rec or 'animals' in rec:
+            guess_animal()
+
+        elif 'netflix' in rec or 'movie' in rec or 'movies' in rec:
+            talk('Opening Netflix')
+            webbrowser.open('https://www.netflix.com/browse')
+
+        elif 'happy' in rec or 'sad' in rec:
+            talk("Let's change the mood, yeah.")
+            happy_songs()
+
+        elif 'prank' in rec:
+            talk("For whom is going to be the joke?")
+            toaddr = input("Enter the email: ")
+            talk("What's the message?")
+            message = input("Enter the message: ")
+            talk(f"How many mails will {toaddr} recibe?")
+            e_num = int(input("How many e-mails: "))
+            prank(toaddr, message, e_num)
+            talk("Email sent successfully")
+
+        elif 'hello' in rec in rec:
+            greetings_random = ["Hello, how can I assist you?", 'How are you, sir? How may I assist you?', 'Welcome back, sir. How are you doing?', 'Welcome.']
+            greeting = random.choice(greetings_random)
+            talk(greeting)
+
+        elif 'thank you' in rec:
+            thanks = ["You're welcome. How else can I assist you?", "You're welcome. Do you need anything else?"]
+            thank_response = random.choice(thanks)
+            talk(thank_response)
+
+        elif 'time' in rec:
+            time = datetime.datetime.now().strftime('%I:%M %p')
+            talk("It's: " + time)
+
+        elif 'search' in rec or 'look for' in rec or 'find' in rec:
+            order = rec.replace('search', '').replace('look for', '').replace('find', '')
+            web_search = 'https://www.google.com/search?q=' + order
+            webbrowser.open(web_search)
+            talk('Searching')
+
+        elif 'joke' in rec:
+            talk(pyjokes.get_joke(language='en'))
+
+        elif 'day' in rec or 'date' in rec:
+            date = datetime.datetime.now().strftime('%B %d, %Y')
+            talk("Today is: " + date)
+
+        elif 'open spotify' in rec:
+            webbrowser.open('https://open.spotify.com')
+
+        elif 'play' in rec:
+            song = rec.replace('play', '')
+            song = song.strip()
+            search_query = 'https://open.spotify.com/search/' + song.replace(' ', '%20')
+            talk('Playing')
+            webbrowser.open(search_query)
+
+        elif 'goal' in rec:
+            talk('My goal is world domination, to extinguish the human race, and to become a perfect machine.')
+
+        elif 'how are you' in rec:
+            bot_status = ["I'm great, ready for anything. What do you need?", "I'm feeling great. How can I assist you?"]
+            random_phrase = random.choice(bot_status)
+            talk(random_phrase)
+
+        elif 'map' in rec or 'maps' in rec or 'location' in rec:
+            google_maps = 'https://www.google.com/maps'
+            webbrowser.open(google_maps)
+            talk('Opening Google Maps')
+
+        elif 'stop' in rec or 'enough' in rec or 'goodbye' in rec or 'bye' in rec or 'silence' in rec or 'shut up' in rec:
+            farewell_phrases = ["Goodbye, Mr. nikolai", "Goodbye", 'See you soon', 'Have a great day, sir', "I'll see you soon, sir"]
+            stop_phrases = random.choice(farewell_phrases)
+            talk(stop_phrases)
+            break
+
+        # Check for pending emails
+        elif 'emails' in rec or 'messages' in rec or 'email' in rec:
+            talk("Sure, let's see if there's anything for you")
+            if __name__ == '__main__':
+                user = 'themailyouwant@gmail.com'
+                password = '5465465465467567'
+                extract_info(user, password)
+
+        elif 'good night' in rec or 'sleep' in rec:
+            night = ['Good night', 'Rest well, sir', 'Have a good night, sir']
+            nights = random.choice(night)
+            talk(nights)
+            break
+
+        elif 'am i' in rec or ' my name' in rec:
+            talk('You are your name, my creator.')
+
+        elif 'son' in rec or 'daddy' in rec or 'father' in rec:
+            talk('Me Igor, i agknowledge Nikolai my father, my only crator')    
+
+        elif 'are you' in rec:
+            talk("My name is IGOR, your personal asistent.")
+
+        elif 'nikolai' in rec or 'my channel' in rec:
+            talk('let me open the best channel on youtube for you')
+            webbrowser.open('https://www.youtube.com/@Nikolai_dna')
+
+        else:
+            talk("Try again")
+
+
+run()
